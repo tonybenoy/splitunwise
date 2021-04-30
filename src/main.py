@@ -43,10 +43,10 @@ async def create_expense(expense: ExpenseNew, db: Session = Depends(get_db)):
     amount_due = 0
     split_users = []
     for split in expense.splits:
-        if split.amount >= 0:
+        if split.amount <= 0:
             return {
                 "result": "error",
-                "message": "Split amount should always be negative or non zero!",
+                "message": "Split amount should always be positive or non zero!",
             }
         amount_due += split.amount
         split_users.append(split.user_id)
@@ -107,5 +107,47 @@ async def create_payment(payment: PaymentNew, db: Session = Depends(get_db)):
 
 @app.post("/fetch_statement")
 async def get_amount_owed(user_id: int, db: Session = Depends(get_db)):
+    resp = db.execute(
+        """
+    select
+        paid_by as owed_to,
+        s.user_id as owed_by,
+        sum(coalesce (s.amount,0))-sum(coalesce (p.amount,0)) as amount
+    from
+        split s
+    join expense e on
+        s.expense_id = e.id
+    left join payment p on
+        p.paid_to = paid_by
+        and s.user_id = p.user_id
+    where
+        s.user_id = :user_id
+    group by
+        1,
+        2""",
+        {"user_id": user_id},
+    ).all()
+    return {"result": "success", "message": "Statment fetch!", "data": resp}
 
-    return {"result": "success", "message": "Statment fetch!", "data": {}}
+
+@app.post("/fetch_owed")
+async def get_amount_owed(user_id: int, db: Session = Depends(get_db)):
+    resp = db.execute(
+        """
+        select
+            paid_by,
+            sum(coalesce (s.amount,0))-sum(coalesce (p.amount,0))
+        from
+            split s
+        join expense e on
+            s.expense_id = e.id
+        left join payment p on
+            p.paid_to = paid_by
+            and s.user_id = p.user_id
+        where
+            paid_by=:user_id
+        group by
+            1""",
+        {"user_id": user_id},
+    ).all()
+    return {"result": "success", "message": "Owed amount!", "data": resp}
