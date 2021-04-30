@@ -131,7 +131,7 @@ async def get_amount_owed(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/fetch_owed")
-async def get_amount_owed(user_id: int, db: Session = Depends(get_db)):
+async def get_owed(user_id: int, db: Session = Depends(get_db)):
     resp = db.execute(
         """
         select
