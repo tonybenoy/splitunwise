@@ -1,0 +1,13 @@
+version: "3"
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: localhost:5000/tony/splitunwise
+    ports:
+      - "8000:8000"
+    volumes:
+      - type: bind
+        source: ./src
+        target: /src
