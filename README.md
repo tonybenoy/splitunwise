@@ -16,6 +16,6 @@ docker-compose up
 
 ## First Time setup
 
-After first `docker-compose up` create table split and run `alembic upgrade head`
+After first `docker-compose up` create database split and run `alembic upgrade head`
 
 Docs at localhost:8000/docs
